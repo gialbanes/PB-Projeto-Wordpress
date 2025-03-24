@@ -1,0 +1,52 @@
+!#/bin/bash
+
+# instalação do Docker
+sudo yum install -y Docker
+
+# instalação do docker-compose 
+sudo curl "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+# instalação da imagem do wordpress
+docker pull wordpress
+
+# área de trabalho para o wordpress
+mkdir wordpress
+cd wordpress
+sudo nano docker-compose.yml
+
+services:
+
+  wordpress:
+    image: wordpress
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: exampleuser
+      WORDPRESS_DB_PASSWORD: examplepass
+      WORDPRESS_DB_NAME: exampledb
+    volumes:
+      - wordpress:/var/www/html
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  wordpress:
+  db:
+
+
+# construindo o container wordpress
+sudo docker-compose up -d --build
+sudo docker run -d -it wordpress
