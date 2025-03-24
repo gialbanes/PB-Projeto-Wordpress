@@ -147,3 +147,94 @@ Caso tudo esteja certo, veremos a tela de conexão:
 ![alt text](imgs/Captura%20de%20tela%202025-03-24%20113701.png)
 
 ## 2. Intalação e configuração do Docker
+Para instalar o Docker, dentro da instância execute: 
+
+```bash
+sudo yum install -y docker 
+```
+![alt text](imgs/instalacao-docker.png)
+
+Para confirmar, verifique a versão do docker com:
+```bash
+docker --version 
+```
+![alt text](imgs/versao-docker.png)
+
+Em seguida, inicie o serviço do docker com: 
+```bash
+sudo service docker start
+```
+![alt text](imgs/start-docker.png)
+
+Para confirmar, veja se o serviço está rodando:
+```bash
+systemctl status docker 
+```
+![alt text](imgs/status-docker.png)
+
+Agora, é necessário isntalar o docker-compose, para isso, execute:
+![alt text](imgs/compose-install.png)
+
+Por fim, instale a imagem do Wordpress com: 
+```bash
+docker pull wordpress
+```
+
+![alt text](imgs/pull-wordpress.png)
+
+Crie um espaço de trabalho para o Wordpress:
+```bash
+mkdir wordpress
+```
+
+Dentro dessa pasta, crie um arquivo `docker-compose.yml`, para iniciar dois serviços, o do Wordpress e de banco de dados, com o seguinte conteúdo: 
+
+```bash
+sudo nao docker-compose.yml
+```
+
+```bash
+services:
+
+  wordpress:
+    image: wordpress
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: exampleuser
+      WORDPRESS_DB_PASSWORD: examplepass
+      WORDPRESS_DB_NAME: exampledb
+    volumes:
+      - wordpress:/var/www/html
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  wordpress:
+  db:
+```
+
+Construa o container a partir do docker-compose:
+```bash
+sudo docker-compose up -d --build
+```
+
+Por fim, rode o container:
+```bash
+sudo docker run -d -it wordpress
+```
+
+Para testar, abra o navegador e digite `localhost:8080`
+
+![alt text](imgs/wordpress.png)
