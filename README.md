@@ -25,6 +25,7 @@ Desenvolver e testar habilidades em **Linux**, **AWS** e **automação de proces
 ## 📑 Índice  
 1. [Configuração do Ambiente](#1-configuração-do-ambiente) 
 2. [Intalação e configuração do Docker](#2-intalação-e-configuração-do-docker)
+3. [Instalação e configuração do Wordpress](#3-instalação-e-configuração-do-wordpress)
 
 ## 1. Configuração do ambiente 
 
@@ -173,9 +174,22 @@ systemctl status docker
 ![alt text](imgs/status-docker.png)
 
 Agora, é necessário isntalar o docker-compose, para isso, execute:
+```bin
+sudo curl "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+```
+
+- o "curl" baixa arquivos da internet;
+- "o" define o nome e local onde o arquivo ficará;
+
 ![alt text](imgs/compose-install.png)
 
-Por fim, instale a imagem do Wordpress com: 
+Adicione a permissão de execução ao arquivo:
+```bin 
+sudo chmod +x /usr/local/bin/docker-compose
+```
+
+## 3. Instalação e configuração do Wordpress
+Dentro da instância, instale a imagem do Wordpress com: 
 ```bash
 docker pull wordpress
 ```
@@ -187,7 +201,7 @@ Crie um espaço de trabalho para o Wordpress:
 mkdir wordpress
 ```
 
-Dentro dessa pasta, crie um arquivo `docker-compose.yml`, para iniciar dois serviços, o do Wordpress e de banco de dados, com o seguinte conteúdo: 
+Dentro dessa pasta, crie um arquivo `docker-compose.yml`. Esse arquivo configura e inicia dois serviços, o WordPress com um banco de dados MySQL.
 
 ```bash
 sudo nao docker-compose.yml
