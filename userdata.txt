@@ -1,23 +1,26 @@
-!#/bin/bash
+#!/bin/bash
 
-# instalação do Docker
-sudo yum install -y Docker
+# Atualiza pacotes
+sudo yum update -y
 
-# instalação do docker-compose 
-sudo curl "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+# Instalação do Docker
+sudo yum install -y docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user  # Adiciona o usuário ao grupo docker
 
+# Instalação do docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-# instalação da imagem do wordpress
-docker pull wordpress
+# Criando diretório do WordPress
+mkdir -p /home/ec2-user/wordpress
+cd /home/ec2-user/wordpress
 
-# área de trabalho para o wordpress
-mkdir wordpress
-cd wordpress
-sudo nano docker-compose.yml
-
+# Criando arquivo docker-compose.yml
+cat <<EOF > docker-compose.yml
+version: '3.8'
 services:
-
   wordpress:
     image: wordpress
     restart: always
@@ -45,8 +48,8 @@ services:
 volumes:
   wordpress:
   db:
+EOF
 
-
-# construindo o container wordpress
-sudo docker-compose up -d --build
+# Inicia os containers
+sudo docker-compose up -d
 sudo docker run -d -it wordpress

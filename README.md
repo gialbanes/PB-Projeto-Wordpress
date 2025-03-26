@@ -88,7 +88,40 @@ Para permitir que as **subnets públicas** acessem a internet:
 
 Agora, suas **subnets públicas** podem acessar a internet!  
 
-### 1.2 Criar uma instância EC2  
+### 1.2 Criar um banco de dados MySQL no Amazon RDS
+No console da AWS, pesquise pelo serviço "Aurora and RDS" e crie um novo database, de acordo com as orientações abaixo:
+
+1. Selecione MySQL como o tipo de banco de dados. Escolha a versão mais recente disponível.
+![alt text](imgs/mysql.png)
+
+2. Marque a opção Free Tier para evitar cobranças.
+![alt text](imgs/freetier.png)
+
+3. Defina um ID único para o banco de dados.
+![alt text](imgs/id.png)
+
+4. Forneça um nome de usuário, assim como sua própria senha em `Self managed`
+![alt text](imgs/credentials.png)
+
+5. Escolha a instância do tipo db.t3.micro.
+![alt text](imgs/t3.png)
+
+6. Na aba `Storage`, clique em `Additional storage configuration` e defina o tamanho máximo como 22GB.
+![alt text](imgs/storage.png)
+
+7. Na aba `Connectivity`, escolha `Don’t connect to an EC2 compute resource`. 
+![alt text](imgs/vpc.png)
+
+
+> **Nota de Atenção**:  
+> Selecione a mesma VPC e subnet utilizadas na sua instância EC2 para permitir a comunicação entre elas.
+
+8. Por fim, na aba `Additional configuration`, dê um nome ao seu database. 
+![alt text](imgs/db_name.png)
+
+
+
+### 1.3 Criar uma instância EC2  
 Com a VPC configurada, podemos criar uma **instância EC2**, que será o servidor web do nosso projeto.  
 
 Antes disso, é essencial configurar um **Security Group**, que atua como um firewall controlando o tráfego de entrada e saída da instância.  
@@ -99,11 +132,28 @@ No console da AWS, acesse **EC2 → Security Groups** e crie um novo com as segu
 ✅ **Regra de entrada:**  
    - **HTTP (porta 80)** → Permite tráfego de qualquer origem (`0.0.0.0/0`)  
    - **SSH (porta 22)** → Permite apenas o acesso do seu IP (`Meu IP`) para garantir segurança  
+  - **HTTPS (porta 443)** → Permite tráfego de qualquer origem (`0.0.0.0/0`)  
+   
+
+✅ **Regra de saída:**  
+   - Permitir todo o tráfego de saída (padrão)
+   - **MySQL/Aurora (porta 3306)** -> Permite tráfego do Security Group do banco de dados
+
+![alt text](imgs/sg-ec2.png) 
+![alt text](imgs/sg-ec2-2.png) 
+
+No console da AWS, acesse **EC2 → Security Groups** defina as seguintes regras para o security group do banco de dados: 
+
+✅ **Regra de entrada:**  
+   - Permitir todo o tráfego de saída (padrão)
+   - **MySQL/Aurora (porta 3306)** -> Permite tráfego do Security Group da instância EC2
 
 ✅ **Regra de saída:**  
    - Permitir todo o tráfego de saída (padrão)
 
-![alt text](imgs/image-6.png) 
+![alt text](imgs/sg-bd.png) 
+![alt text](imgs/sg-bd-2.png) 
+
 
 Agora podemos criar a instância EC2:  
 
@@ -123,7 +173,7 @@ Agora podemos criar a instância EC2:
 
 ---
 
-### 1.3 Acessar a instância via SSH  
+### 1.4 Acessar a instância via SSH  
 
 Agora que a EC2 está criada, podemos acessá-la via **SSH**.  
 
@@ -147,6 +197,20 @@ ssh -i "suaChave.pem" ec2-user@IpPublicoDaEC2
 Caso tudo esteja certo, veremos a tela de conexão:
 ![alt text](imgs/Captura%20de%20tela%202025-03-24%20113701.png)
 
+### 1.5 Tentar conexão entre a EC2 e o banco de dados
+Após acessar a instância, execute os seguinte comando: 
+```bash
+mysql -h db-wordpress.cxyow8s4km5z.us-east-1.rds.amazonaws.com -u giovana -p 
+```
+
+Logo em seguida:
+```bash
+show databases;
+```
+
+O banco de dados que você criou deve ser listado. 
+![alt text](imgs/conexao.png)
+
 ## 2. Intalação e configuração do Docker
 Para instalar o Docker, dentro da instância execute: 
 
@@ -167,15 +231,16 @@ sudo service docker start
 ```
 ![alt text](imgs/start-docker.png)
 
-Para confirmar, veja se o serviço está rodando:
+Habilite o serviço do docker. Para confirmar, veja se o serviço está rodando:
 ```bash
-systemctl status docker 
+sudo systemctl enable docker
+sudo systemctl status docker 
 ```
 ![alt text](imgs/status-docker.png)
 
 Agora, é necessário isntalar o docker-compose, para isso, execute:
 ```bin
-sudo curl "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 ```
 
 - o "curl" baixa arquivos da internet;
@@ -191,7 +256,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 ## 3. Instalação e configuração do Wordpress
 Dentro da instância, instale a imagem do Wordpress com: 
 ```bash
-docker pull wordpress
+sudo docker pull wordpress
 ```
 
 ![alt text](imgs/pull-wordpress.png)
@@ -204,7 +269,7 @@ mkdir wordpress
 Dentro dessa pasta, crie um arquivo `docker-compose.yml`. Esse arquivo configura e inicia dois serviços, o WordPress com um banco de dados MySQL.
 
 ```bash
-sudo nao docker-compose.yml
+sudo nano docker-compose.yml
 ```
 
 ```bash
@@ -214,29 +279,23 @@ services:
     image: wordpress
     restart: always
     ports:
-      - 8080:80
+      - "80:80"
     environment:
-      WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_USER: exampleuser
-      WORDPRESS_DB_PASSWORD: examplepass
-      WORDPRESS_DB_NAME: exampledb
+      WORDPRESS_DB_HOST: seuHost
+      WORDPRESS_DB_USER: seuUser
+      WORDPRESS_DB_PASSWORD: suaSenha
+      WORDPRESS_DB_NAME: seuBanco
     volumes:
       - wordpress:/var/www/html
-
-  db:
-    image: mysql:8.0
-    restart: always
-    environment:
-      MYSQL_DATABASE: exampledb
-      MYSQL_USER: exampleuser
-      MYSQL_PASSWORD: examplepass
-      MYSQL_RANDOM_ROOT_PASSWORD: '1'
-    volumes:
-      - db:/var/lib/mysql
-
+    networks:
+      - rede       
 volumes:
   wordpress:
   db:
+
+networks:  
+  rede:    
+   driver: bridge
 ```
 
 Construa o container a partir do docker-compose:
@@ -249,6 +308,6 @@ Por fim, rode o container:
 sudo docker run -d -it wordpress
 ```
 
-Para testar, abra o navegador e digite `localhost:8080`
+Para testar, abra o navegador e digite `https://ipDaInstancia`
 
 ![alt text](imgs/wordpress.png)
