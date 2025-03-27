@@ -129,8 +129,7 @@ Antes disso, é essencial configurar um **Security Group**, que atua como um fir
 #### 🔹 Criando um Security Group  
 No console da AWS, acesse **EC2 → Security Groups** e crie um novo com as seguintes regras:  
 
-✅ **Regra de entrada:**  
-   - **HTTP (porta 80)** → Permite tráfego de qualquer origem (`0.0.0.0/0`)  
+✅ **Regra de entrada:**   
    - **SSH (porta 22)** → Permite apenas o acesso do seu IP (`Meu IP`) para garantir segurança  
   - **HTTPS (porta 443)** → Permite tráfego de qualquer origem (`0.0.0.0/0`)  
    
@@ -305,7 +304,7 @@ sudo docker-compose up -d --build
 
 Por fim, rode o container:
 ```bash
-sudo docker run -d -it wordpress
+sudo docker run -d -it wordpress 
 ```
 
 Para testar, abra o navegador e digite `https://ipDaInstancia`
