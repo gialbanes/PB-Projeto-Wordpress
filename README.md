@@ -88,8 +88,62 @@ Para permitir que as **subnets públicas** acessem a internet:
 
 Agora, suas **subnets públicas** podem acessar a internet!  
 
-### 1.2 Criar um banco de dados MySQL no Amazon RDS
-No console da AWS, pesquise pelo serviço "Aurora and RDS" e crie um novo database, de acordo com as orientações abaixo:
+### 1.2 Criar Security Group para o Amazon RDS
+No console da AWS, acesse **EC2 → Security Groups** defina as seguintes regras para o security group do banco de dados: 
+
+✅ **Regra de entrada:**  
+   - Permitir todo o tráfego de saída (padrão)
+   - **MySQL/Aurora (porta 3306)** -> Permite tráfego do Security Group da instância EC2
+
+✅ **Regra de saída:**  
+   - Permitir todo o tráfego de saída (padrão)
+
+![alt text](imgs/sg-bd.png) 
+![alt text](imgs/sg-bd-2.png) 
+
+
+### 1.3 Criar Security Group para EC2
+Com a VPC configurada, podemos criar uma **instância EC2**, que será o servidor web do nosso projeto.  
+
+Antes disso, é essencial configurar um **Security Group**, que atua como um firewall controlando o tráfego de entrada e saída da instância.  
+
+#### 🔹 Criando um Security Group  
+No console da AWS, acesse **EC2 → Security Groups** e crie um novo com as seguintes regras:  
+
+✅ **Regra de entrada:**   
+   - **SSH (porta 22)** → Permite apenas o acesso do seu IP (`Meu IP`) para garantir segurança  
+  - **HTTPS (porta 443)** → Permite tráfego de qualquer origem (`0.0.0.0/0`)  
+   
+
+✅ **Regra de saída:**  
+   - Permitir todo o tráfego de saída (padrão)
+   - **MySQL/Aurora (porta 3306)** -> Permite tráfego do Security Group do banco de dados
+
+![alt text](imgs/sg-ec2.png) 
+![alt text](imgs/sg-ec2-2.png) 
+
+
+### 1.4 Criar Security Group para o Amazon EFS
+Antes de criar um EFS de fato, é necessário criar um Security Group pra ele.
+
+Acesse o serviço da EC2, na aba de `Network & Security` clique em `Security Group` e crie um novo chamado `efs-sg`.   
+
+✅ **Regra de entrada:**   
+   - **NFS (porta 2049)** → Permite apenas o acesso do grupo de segurança utilizado para a instância.  
+   
+✅ **Regra de saída:**  
+   - Permitir todo o tráfego de saída (padrão)
+
+![alt text](imgs/sg-efs-1.png)
+![alt text](imgs/sg-efs-2.png)
+
+
+
+
+
+
+## 2. Criar um banco de dados MySQL no Amazon RDS
+No console da AWS, pesquise pelo serviço `Aurora and RDS` e crie um novo database, de acordo com as orientações abaixo:
 
 1. Selecione MySQL como o tipo de banco de dados. Escolha a versão mais recente disponível.
 ![alt text](imgs/mysql.png)
@@ -121,40 +175,21 @@ No console da AWS, pesquise pelo serviço "Aurora and RDS" e crie um novo databa
 
 
 
-### 1.3 Criar uma instância EC2  
-Com a VPC configurada, podemos criar uma **instância EC2**, que será o servidor web do nosso projeto.  
+## 3. Criar um volume EFS 
+No console da AWS, pesquise pelo serviço `EFS` e crie um novo file system, de acordo com as orientações abaixo:
 
-Antes disso, é essencial configurar um **Security Group**, que atua como um firewall controlando o tráfego de entrada e saída da instância.  
+1. Dê um nome ao file system e o coloque na VPC criada anteriormente 
+![alt text](imgs/efs-vpc.png)
 
-#### 🔹 Criando um Security Group  
-No console da AWS, acesse **EC2 → Security Groups** e crie um novo com as seguintes regras:  
+2. Depois de criado, o selecione e vá até `Network`
+![alt text](imgs/efs-network.png)
 
-✅ **Regra de entrada:**   
-   - **SSH (porta 22)** → Permite apenas o acesso do seu IP (`Meu IP`) para garantir segurança  
-  - **HTTPS (porta 443)** → Permite tráfego de qualquer origem (`0.0.0.0/0`)  
-   
-
-✅ **Regra de saída:**  
-   - Permitir todo o tráfego de saída (padrão)
-   - **MySQL/Aurora (porta 3306)** -> Permite tráfego do Security Group do banco de dados
-
-![alt text](imgs/sg-ec2.png) 
-![alt text](imgs/sg-ec2-2.png) 
-
-No console da AWS, acesse **EC2 → Security Groups** defina as seguintes regras para o security group do banco de dados: 
-
-✅ **Regra de entrada:**  
-   - Permitir todo o tráfego de saída (padrão)
-   - **MySQL/Aurora (porta 3306)** -> Permite tráfego do Security Group da instância EC2
-
-✅ **Regra de saída:**  
-   - Permitir todo o tráfego de saída (padrão)
-
-![alt text](imgs/sg-bd.png) 
-![alt text](imgs/sg-bd-2.png) 
+3. Clique em `Manage`, e em seguida, exclua os mount targets já existentes. Depois, configure uma na zona `us-east-1a`  na subnet pública com o Security Group do EFS criado anteriormente
+![alt text](imgs/efs-mount-target.png)
 
 
-Agora podemos criar a instância EC2:  
+## 4. Criar uma instância EC2  
+Com o Security Group criado, agora podemos criar a instância EC2:  
 
 1️⃣ No console da AWS, vá até **EC2 → Instâncias** e clique em **Criar Instância**  
 2️⃣ Escolha a **AMI Amazon Linux 2023**  
@@ -172,7 +207,7 @@ Agora podemos criar a instância EC2:
 
 ---
 
-### 1.4 Acessar a instância via SSH  
+### 4.1 Acessar a instância via SSH  
 
 Agora que a EC2 está criada, podemos acessá-la via **SSH**.  
 
@@ -196,7 +231,7 @@ ssh -i "suaChave.pem" ec2-user@IpPublicoDaEC2
 Caso tudo esteja certo, veremos a tela de conexão:
 ![alt text](imgs/Captura%20de%20tela%202025-03-24%20113701.png)
 
-### 1.5 Tentar conexão entre a EC2 e o banco de dados
+### 4.2 Tentar conexão entre a EC2 e o banco de dados
 Após acessar a instância, execute os seguinte comando: 
 ```bash
 mysql -h db-wordpress.cxyow8s4km5z.us-east-1.rds.amazonaws.com -u giovana -p 
@@ -210,7 +245,7 @@ show databases;
 O banco de dados que você criou deve ser listado. 
 ![alt text](imgs/conexao.png)
 
-## 2. Intalação e configuração do Docker
+## 5. Intalação e configuração do Docker
 Para instalar o Docker, dentro da instância execute: 
 
 ```bash
@@ -252,7 +287,7 @@ Adicione a permissão de execução ao arquivo:
 sudo chmod +x /usr/local/bin/docker-compose
 ```
 
-## 3. Instalação e configuração do Wordpress
+## 6. Instalação e configuração do Wordpress
 Dentro da instância, instale a imagem do Wordpress com: 
 ```bash
 sudo docker pull wordpress

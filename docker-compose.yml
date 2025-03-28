@@ -1,0 +1,23 @@
+services:
+
+  wordpress:
+    image: wordpress
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: db-wordpress.cxyow8s4km5z.us-east-1.rds.amazonaws.com
+      WORDPRESS_DB_USER: giovana
+      WORDPRESS_DB_PASSWORD: teste123
+      WORDPRESS_DB_NAME: db_wordpress
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - rede       
+volumes:
+  wordpress:
+  db:
+
+networks:  
+  rede:    
+   driver: bridge
