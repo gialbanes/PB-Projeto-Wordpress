@@ -10,14 +10,12 @@ services:
       WORDPRESS_DB_USER: giovana
       WORDPRESS_DB_PASSWORD: teste123
       WORDPRESS_DB_NAME: db_wordpress
-    volumes:
-      - wordpress:/var/www/html
     networks:
-      - rede       
+      - rede
 volumes:
-  wordpress:
-  db:
+  - /mnt/wordpress:/var/www/html
 
-networks:  
-  rede:    
+
+networks:
+  rede:
    driver: bridge
