@@ -13,7 +13,7 @@ services:
     networks:
       - rede
 volumes:
-  - /mnt/wordpress:/var/www/html
+  - /home/ec2-user/mnt/wordpress:/var/www/html
 
 
 networks:
