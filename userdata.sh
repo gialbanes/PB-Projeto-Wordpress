@@ -3,53 +3,32 @@
 # Atualiza pacotes
 sudo yum update -y
 
-# Instalação do Docker
+# Instalação do Docker e habilitação do serviço
 sudo yum install -y docker
 sudo systemctl start docker
 sudo systemctl enable docker
+sudo docker --version
 
-# Instalação do docker-compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+# Instalação do wget e efs-utils
+sudo yum install wget -y
+sudo yum install amazon-efs-utils -y
+
+# Instalação do docker-compose e fornecendo permissão de execução à ele
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
-
-# Instalação do mysql-client
-sudo yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
-
-sudo yum install mysql-community-client -y --nogpgcheck
 
 
 # Criando diretório do WordPress
-mkdir -p wordpress
-cd wordpress/
+mkdir -p /mnt/wordpress
 
-# Criando arquivo docker-compose.yml
-cat <<EOF > docker-compose.yml
-version: '3.8'
-services:
+# Montagem do efs
+sudo mount -t efs -o tls fs-05578cd8a5b20e263:/ /mnt/wordpress
 
-  wordpress:
-    image: wordpress
-    restart: always
-    ports:
-      - "80:80"
-    environment:
-      WORDPRESS_DB_HOST: db-wordpress.cxyow8s4km5z.us-east-1.rds.amazonaws.com
-      WORDPRESS_DB_USER: giovana
-      WORDPRESS_DB_PASSWORD: teste123
-      WORDPRESS_DB_NAME: db_wordpress
-    volumes:
-      - wordpress:/var/www/html
-    networks:
-      - rede       
-volumes:
-  wordpress:
-  db:
+# Pegando o do meu GitHub arquivo docker-compose.yml
+wget -O /home/ec2-user/docker-compose.yml https://raw.githubusercontent.com/gialbanes/PB-Projeto-Wordpress/refs/heads/main/docker-compose.yml
+sudo chown ec2-user:ec2-user /home/ec2-user/docker-compose.yml
 
-networks:  
-  rede:    
-   driver: bridge
-EOF
 
 # Inicia os containers
-sudo docker-compose up -d
-sudo docker run -d -it wordpress
+cd /home/ec2-user
+sudo docker-compose up -d --build 
