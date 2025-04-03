@@ -6,14 +6,14 @@ services:
     ports:
       - "80:80"
     environment:
-      WORDPRESS_DB_HOST: db-wordpress.cxyow8s4km5z.us-east-1.rds.amazonaws.com
-      WORDPRESS_DB_USER: giovana
-      WORDPRESS_DB_PASSWORD: teste123
-      WORDPRESS_DB_NAME: db_wordpress
+      WORDPRESS_DB_HOST: endpoint do rds
+      WORDPRESS_DB_USER: nameUser
+      WORDPRESS_DB_PASSWORD: passwordUser
+      WORDPRESS_DB_NAME: nameDB
     networks:
       - rede
     volumes:
-      - /home/ec2-user/mnt/wordpress:/var/www/html
+      - /home/ec2-user[sua pasta]:/var/www/html
 
 
 networks:

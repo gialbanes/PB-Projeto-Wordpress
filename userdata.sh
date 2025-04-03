@@ -18,14 +18,14 @@ sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-
 sudo chmod +x /usr/local/bin/docker-compose
 
 
-# Criando diretório do WordPress
-mkdir -p /mnt/wordpress
+# Criando diretório 
+mkdir -p [nome da pasta]
 
 # Montagem do efs
-sudo mount -t efs -o tls fs-05578cd8a5b20e263:/ /mnt/wordpress
+[link do seu volume efs (pegar no efs -> attach)] [pasta criada]
 
 # Pegando o do meu GitHub arquivo docker-compose.yml
-wget -O /home/ec2-user/docker-compose.yml https://raw.githubusercontent.com/gialbanes/PB-Projeto-Wordpress/refs/heads/main/docker-compose.yml
+wget -O /home/ec2-user/docker-compose.yml [link do docker-compose no seu github (raw)]
 sudo chown ec2-user:ec2-user /home/ec2-user/docker-compose.yml
 
 
